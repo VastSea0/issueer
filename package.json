@@ -2,15 +2,16 @@
   "name": "issueer",
   "version": "1.0.0",
   "description": "AI-powered issue maker",
-  "license": "ISC",
-  "author": "",
-  "type": "commonjs",
+  "license": "GNU General Public License v3.0",
+  "author": "Egehan KAHRAMAN",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node index.js"
   },
   "dependencies": {
+    "dotenv": "^17.2.1",
     "openai": "^5.12.2"
   }
 }

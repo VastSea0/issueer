@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import OpenAI from "openai";
 
 const token = process.env["GITHUB_TOKEN"];
@@ -26,6 +27,3 @@ main().catch((err) => {
   console.error("The sample encountered an error:", err);
 });
 
-module.exports = {
-  main
-};

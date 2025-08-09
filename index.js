@@ -1,3 +1,3 @@
-const { main } = require('./models/model');
+import { main } from './models/model.js';
 
-main();  
+main();
