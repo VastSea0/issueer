@@ -8,7 +8,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "run": "node index.js"
+    "dev": "node index.js"
   },
   "dependencies": {
     "openai": "^5.12.2"
