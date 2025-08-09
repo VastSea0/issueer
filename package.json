@@ -11,6 +11,7 @@
     "dev": "node index.js"
   },
   "dependencies": {
+    "@octokit/rest": "^22.0.0",
     "dotenv": "^17.2.1",
     "openai": "^5.12.2"
   }
