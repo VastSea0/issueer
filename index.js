@@ -1,3 +1,3 @@
-import { main } from './models/model.js';
+import { chat } from './models/model.js';
 
-main();
+chat();
