@@ -128,7 +128,7 @@ async function chat() {
       console.log(`
 🔧 How to use:
 - Describe any bug: "The login button doesn't work on mobile"
-- Request features: "We need a dark mode toggle"
+- Request features: "We need a dark mode toggle"  
 - Mention tasks: "Need to update the README file"
 - Set default repo: "Set default repo to owner/repository-name"
 
@@ -158,19 +158,50 @@ I'll automatically detect when to create GitHub issues! 🚀
       
       if (analysis.shouldCreateIssue) {
         console.log(`\n🎯 Detected: ${analysis.type.toUpperCase()}`);
-        console.log(`📋 Suggested title: "${analysis.title}"`);
         console.log(`💭 Reasoning: ${analysis.reasoning}\n`);
         
+        // Ask for repository
         let repoToUse = defaultRepo;
-        
         if (!repoToUse) {
           repoToUse = await new Promise(resolve => {
             rl.question("🏠 Repository (owner/repo-name): ", resolve);
           });
+        } else {
+          console.log(`🏠 Using default repository: ${defaultRepo}`);
         }
         
+        // Show and allow editing of title
+        console.log(`\n📋 Suggested title: "${analysis.title}"`);
+        const titleInput = await new Promise(resolve => {
+          rl.question("✏️  Edit title (press Enter to keep current): ", resolve);
+        });
+        const finalTitle = titleInput.trim() || analysis.title;
+        
+        // Show and allow editing of description
+        console.log(`\n📝 Suggested description:\n${analysis.description}`);
+        const descInput = await new Promise(resolve => {
+          rl.question("✏️  Edit description (press Enter to keep current): ", resolve);
+        });
+        const finalDescription = descInput.trim() || analysis.description;
+        
+        // Show and allow editing of labels
+        console.log(`\n🏷️  Suggested labels: ${analysis.labels.join(', ')}`);
+        const labelsInput = await new Promise(resolve => {
+          rl.question("✏️  Edit labels (comma-separated, press Enter to keep current): ", resolve);
+        });
+        const finalLabels = labelsInput.trim() 
+          ? labelsInput.split(',').map(l => l.trim()).filter(l => l)
+          : analysis.labels;
+        
+        // Show final summary
+        console.log(`\n📋 Final Issue Summary:`);
+        console.log(`🏠 Repository: ${repoToUse}`);
+        console.log(`📌 Title: ${finalTitle}`);
+        console.log(`📝 Description: ${finalDescription.substring(0, 100)}${finalDescription.length > 100 ? '...' : ''}`);
+        console.log(`🏷️  Labels: ${finalLabels.join(', ')}`);
+        
         const confirm = await new Promise(resolve => {
-          rl.question("🚀 Create this issue? (y/n): ", resolve);
+          rl.question("\n🚀 Create this issue? (y/n): ", resolve);
         });
         
         if (confirm.toLowerCase() === 'y' || confirm.toLowerCase() === 'yes') {
@@ -183,9 +214,9 @@ I'll automatically detect when to create GitHub issues! 🚀
             const result = await createGitHubIssue(
               owner, 
               repo, 
-              analysis.title, 
-              analysis.description, 
-              analysis.labels
+              finalTitle, 
+              finalDescription, 
+              finalLabels
             );
             
             if (result.success) {
@@ -197,12 +228,13 @@ I'll automatically detect when to create GitHub issues! 🚀
             }
           }
         } else {
-          console.log("Issue creation cancelled.");
+          console.log("❌ Issue creation cancelled.");
         }
         console.log("----------------------------------------");
+        continue; // Skip normal chat for issue creation
       }
 
-      // Continue with normal chat
+      // Continue with normal chat only if no issue was detected
       const response = await client.chat.completions.create({
         messages: messages,
         temperature: 0.7,
