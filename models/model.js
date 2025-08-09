@@ -67,6 +67,17 @@ async function analyzeForIssueCreation(userMessage) {
 
 User message: "${userMessage}"
 
+Important: Only suggest creating an issue if the user provides SPECIFIC details about:
+- A bug with clear symptoms
+- A specific feature request
+- A specific task with details
+- A problem with clear description
+
+DO NOT suggest creating an issue for:
+- Vague requests like "create an issue" without details
+- General questions
+- Requests for help without specifics
+
 Respond with ONLY valid JSON in this exact format (no markdown, no code blocks):
 {
   "shouldCreateIssue": true,
@@ -80,7 +91,7 @@ Respond with ONLY valid JSON in this exact format (no markdown, no code blocks):
   try {
     const response = await client.chat.completions.create({
       messages: [
-        { role: "system", content: "You are an expert at analyzing text for GitHub issue creation. Always respond with ONLY valid JSON, no markdown formatting or code blocks." },
+        { role: "system", content: "You are an expert at analyzing text for GitHub issue creation. Only suggest creating issues when the user provides specific details about bugs, features, or tasks. Always respond with ONLY valid JSON, no markdown formatting or code blocks." },
         { role: "user", content: analysisPrompt }
       ],
       temperature: 0.3,
@@ -105,10 +116,96 @@ Respond with ONLY valid JSON in this exact format (no markdown, no code blocks):
   }
 }
 
+async function askForIssueDetails() {
+  console.log("\n🔍 Let me gather more details for the issue...\n");
+  
+  // Ask what type of issue
+  console.log("What type of issue would you like to create?");
+  console.log("1. 🐛 Bug Report");
+  console.log("2. ✨ Feature Request"); 
+  console.log("3. 📋 Task/Enhancement");
+  console.log("4. 📖 Documentation");
+  
+  const typeChoice = await new Promise(resolve => {
+    rl.question("Choose (1-4): ", resolve);
+  });
+  
+  let issueType, issuePrompts;
+  
+  switch(typeChoice) {
+    case '1':
+      issueType = 'bug';
+      issuePrompts = {
+        title: "🐛 What's the bug? (Brief description): ",
+        description: "📝 Describe the bug in detail (steps to reproduce, expected vs actual behavior): ",
+        labels: "🏷️  Labels (comma-separated, e.g., bug,priority-high): "
+      };
+      break;
+    case '2':
+      issueType = 'feature';
+      issuePrompts = {
+        title: "✨ What feature would you like? (Brief description): ",
+        description: "📝 Describe the feature in detail (what it should do, why it's needed): ",
+        labels: "🏷️  Labels (comma-separated, e.g., enhancement,feature): "
+      };
+      break;
+    case '3':
+      issueType = 'task';
+      issuePrompts = {
+        title: "📋 What task needs to be done? (Brief description): ",
+        description: "📝 Describe the task in detail (what needs to be accomplished): ",
+        labels: "🏷️  Labels (comma-separated, e.g., task,enhancement): "
+      };
+      break;
+    case '4':
+      issueType = 'documentation';
+      issuePrompts = {
+        title: "📖 What documentation is needed? (Brief description): ",
+        description: "📝 Describe what documentation needs to be created or updated: ",
+        labels: "🏷️  Labels (comma-separated, e.g., documentation): "
+      };
+      break;
+    default:
+      issueType = 'general';
+      issuePrompts = {
+        title: "📝 Issue title: ",
+        description: "📝 Issue description: ",
+        labels: "🏷️  Labels (comma-separated): "
+      };
+  }
+  
+  console.log(`\n📝 Creating ${issueType} issue...\n`);
+  
+  const title = await new Promise(resolve => {
+    rl.question(issuePrompts.title, resolve);
+  });
+  
+  const description = await new Promise(resolve => {
+    rl.question(issuePrompts.description, resolve);
+  });
+  
+  const labelsInput = await new Promise(resolve => {
+    rl.question(issuePrompts.labels, resolve);
+  });
+  
+  const labels = labelsInput.trim() 
+    ? labelsInput.split(',').map(l => l.trim()).filter(l => l)
+    : [issueType];
+  
+  return {
+    shouldCreateIssue: true,
+    type: issueType,
+    title: title.trim(),
+    description: description.trim(),
+    labels: labels,
+    reasoning: "User provided detailed information for issue creation"
+  };
+}
+
 async function chat() {
   console.log("🤖 AI-Powered GitHub Issue Assistant");
   console.log("💡 Describe any bugs, features, or tasks - I'll help create issues automatically!");
-  console.log("📝 Commands: 'exit' to quit, 'help' for assistance");
+  console.log("📝 Commands: 'exit' to quit, 'help' for assistance, 'create issue' for manual issue creation");
   console.log("----------------------------------------");
   
   let defaultRepo = null;
@@ -127,13 +224,69 @@ async function chat() {
     if (userInput.toLowerCase() === 'help') {
       console.log(`
 🔧 How to use:
-- Describe any bug: "The login button doesn't work on mobile"
-- Request features: "We need a dark mode toggle"  
-- Mention tasks: "Need to update the README file"
+- Describe specific bugs: "The login button doesn't work on mobile Safari"
+- Request specific features: "Add dark mode toggle to settings page"  
+- Mention specific tasks: "Update README with installation instructions"
 - Set default repo: "Set default repo to owner/repository-name"
+- Manual issue creation: "create issue"
 
 I'll automatically detect when to create GitHub issues! 🚀
 ----------------------------------------`);
+      continue;
+    }
+
+    // Manual issue creation
+    if (userInput.toLowerCase() === 'create issue') {
+      const analysis = await askForIssueDetails();
+      
+      // Continue with issue creation flow...
+      let repoToUse = defaultRepo;
+      if (!repoToUse) {
+        repoToUse = await new Promise(resolve => {
+          rl.question("🏠 Repository (owner/repo-name): ", resolve);
+        });
+      } else {
+        console.log(`🏠 Using default repository: ${defaultRepo}`);
+      }
+      
+      // Show final summary and create issue
+      console.log(`\n📋 Final Issue Summary:`);
+      console.log(`🏠 Repository: ${repoToUse}`);
+      console.log(`📌 Title: ${analysis.title}`);
+      console.log(`📝 Description: ${analysis.description.substring(0, 100)}${analysis.description.length > 100 ? '...' : ''}`);
+      console.log(`🏷️  Labels: ${analysis.labels.join(', ')}`);
+      
+      const confirm = await new Promise(resolve => {
+        rl.question("\n🚀 Create this issue? (y/n): ", resolve);
+      });
+      
+      if (confirm.toLowerCase() === 'y' || confirm.toLowerCase() === 'yes') {
+        const [owner, repo] = repoToUse.split('/');
+        
+        if (!owner || !repo) {
+          console.log("❌ Invalid repository format. Use: owner/repo-name");
+        } else {
+          console.log("⏳ Creating issue...");
+          const result = await createGitHubIssue(
+            owner, 
+            repo, 
+            analysis.title, 
+            analysis.description, 
+            analysis.labels
+          );
+          
+          if (result.success) {
+            console.log(`✅ Issue created successfully!`);
+            console.log(`🔗 URL: ${result.issueUrl}`);
+            console.log(`📝 Issue #${result.issueNumber}`);
+          } else {
+            console.log(`❌ Failed to create issue: ${result.error}`);
+          }
+        }
+      } else {
+        console.log("❌ Issue creation cancelled.");
+      }
+      console.log("----------------------------------------");
       continue;
     }
 
@@ -153,14 +306,15 @@ I'll automatically detect when to create GitHub issues! 🚀
     messages.push({ role: "user", content: userInput });
 
     try {
-      // Analyze if this should become an issue
+      // Analyze if this should become an issue (only for specific descriptions)
       const analysis = await analyzeForIssueCreation(userInput);
       
       if (analysis.shouldCreateIssue) {
+        // Continue with existing issue creation flow...
         console.log(`\n🎯 Detected: ${analysis.type.toUpperCase()}`);
         console.log(`💭 Reasoning: ${analysis.reasoning}\n`);
         
-        // Ask for repository
+        // Rest of the existing issue creation code...
         let repoToUse = defaultRepo;
         if (!repoToUse) {
           repoToUse = await new Promise(resolve => {
@@ -231,7 +385,7 @@ I'll automatically detect when to create GitHub issues! 🚀
           console.log("❌ Issue creation cancelled.");
         }
         console.log("----------------------------------------");
-        continue; // Skip normal chat for issue creation
+        continue;
       }
 
       // Continue with normal chat only if no issue was detected
