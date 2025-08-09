@@ -116,6 +116,56 @@ Respond with ONLY valid JSON in this exact format (no markdown, no code blocks):
   }
 }
 
+async function improveIssueWithAI(issueData) {
+  const improvementPrompt = `Improve this GitHub issue for better clarity and professionalism:
+
+Title: "${issueData.title}"
+Description: "${issueData.description}"
+Type: ${issueData.type}
+Labels: ${issueData.labels.join(', ')}
+
+Please enhance the issue with:
+1. Better, more descriptive title
+2. Professional description with proper formatting
+3. Relevant sections (for bugs: steps to reproduce, expected behavior, etc.)
+4. Suggested additional labels
+5. Use proper markdown formatting
+
+Respond with ONLY valid JSON:
+{
+  "improvedTitle": "Enhanced title",
+  "improvedDescription": "Enhanced description with markdown",
+  "suggestedLabels": ["label1", "label2"],
+  "improvements": "What was improved"
+}`;
+
+  try {
+    const response = await client.chat.completions.create({
+      messages: [
+        { role: "system", content: "You are an expert at writing professional GitHub issues. Always respond with valid JSON and use proper markdown formatting in descriptions." },
+        { role: "user", content: improvementPrompt }
+      ],
+      temperature: 0.5,
+      max_tokens: 800,
+      model: modelName
+    });
+
+    let content = response.choices[0].message.content.trim();
+    
+    // Remove markdown code blocks if present
+    if (content.startsWith('```json')) {
+      content = content.replace(/```json\n?/, '').replace(/\n?```$/, '');
+    } else if (content.startsWith('```')) {
+      content = content.replace(/```\n?/, '').replace(/\n?```$/, '');
+    }
+    
+    return JSON.parse(content);
+  } catch (error) {
+    console.error("Error improving issue:", error);
+    return null;
+  }
+}
+
 async function askForIssueDetails() {
   console.log("\n🔍 Let me gather more details for the issue...\n");
   
@@ -191,8 +241,14 @@ async function askForIssueDetails() {
   const labels = labelsInput.trim() 
     ? labelsInput.split(',').map(l => l.trim()).filter(l => l)
     : [issueType];
-  
-  return {
+
+  // Ask if user wants AI improvement
+  console.log("\n🤖 Would you like AI to improve this issue for better clarity and professionalism?");
+  const wantsImprovement = await new Promise(resolve => {
+    rl.question("Improve with AI? (y/n): ", resolve);
+  });
+
+  let finalIssueData = {
     shouldCreateIssue: true,
     type: issueType,
     title: title.trim(),
@@ -200,6 +256,40 @@ async function askForIssueDetails() {
     labels: labels,
     reasoning: "User provided detailed information for issue creation"
   };
+
+  if (wantsImprovement.toLowerCase() === 'y' || wantsImprovement.toLowerCase() === 'yes') {
+    console.log("🔄 AI is improving your issue...");
+    
+    const improvement = await improveIssueWithAI(finalIssueData);
+    
+    if (improvement) {
+      console.log("\n✨ AI Improvements:");
+      console.log(`📌 Original Title: "${finalIssueData.title}"`);
+      console.log(`📌 Improved Title: "${improvement.improvedTitle}"`);
+      console.log(`\n📝 Original Description:\n${finalIssueData.description}`);
+      console.log(`\n📝 Improved Description:\n${improvement.improvedDescription}`);
+      console.log(`\n🏷️  Original Labels: ${finalIssueData.labels.join(', ')}`);
+      console.log(`🏷️  Suggested Labels: ${improvement.suggestedLabels.join(', ')}`);
+      console.log(`\n💡 What was improved: ${improvement.improvements}`);
+      
+      const acceptImprovement = await new Promise(resolve => {
+        rl.question("\n✅ Accept AI improvements? (y/n): ", resolve);
+      });
+      
+      if (acceptImprovement.toLowerCase() === 'y' || acceptImprovement.toLowerCase() === 'yes') {
+        finalIssueData.title = improvement.improvedTitle;
+        finalIssueData.description = improvement.improvedDescription;
+        finalIssueData.labels = improvement.suggestedLabels;
+        console.log("✅ AI improvements accepted!");
+      } else {
+        console.log("📝 Keeping original issue details.");
+      }
+    } else {
+      console.log("❌ AI improvement failed, keeping original details.");
+    }
+  }
+  
+  return finalIssueData;
 }
 
 async function chat() {
@@ -230,7 +320,7 @@ async function chat() {
 - Set default repo: "Set default repo to owner/repository-name"
 - Manual issue creation: "create issue"
 
-I'll automatically detect when to create GitHub issues! 🚀
+✨ New: AI can improve your issues for better clarity and professionalism!
 ----------------------------------------`);
       continue;
     }
