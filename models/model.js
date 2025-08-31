@@ -10,35 +10,6 @@ const modelName = "openai/gpt-4o-mini";
 const client = new OpenAI({ baseURL: endpoint, apiKey: token });
 const octokit = new Octokit({ auth: token });
 
-const messages = [
-  { 
-    role: "system", 
-    content: `You are an AI assistant that helps create GitHub issues. When a user describes a problem, bug, feature request, or task, you can automatically create a GitHub issue for them.
-
-Available functions:
-- create_github_issue: Creates a GitHub issue with title, description, labels, and assignees
-
-When the user mentions:
-- A bug or problem
-- A feature they want
-- A task that needs to be done
-- Something that should be fixed
-
-Ask them which repository they want to create the issue in, then create it automatically.
-
-Always format issues professionally with:
-- Clear, descriptive titles
-- Detailed descriptions with steps to reproduce (for bugs)
-- Relevant labels
-- Proper markdown formatting`
-  }
-];
-
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
-
 async function createGitHubIssue(owner, repo, title, body, labels = []) {
   try {
     const response = await octokit.rest.issues.create({
@@ -503,4 +474,4 @@ chat().catch((err) => {
   rl.close();
 });
 
-export { chat };
+export { chat, createGitHubIssue, analyzeForIssueCreation, improveIssueWithAI };

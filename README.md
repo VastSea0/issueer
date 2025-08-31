@@ -14,6 +14,8 @@
 - 🏠 **Repository Management** - Set default repositories for quick issue creation
 - 📋 **Multiple Issue Types** - Support for bugs, features, tasks, and documentation
 - 🤖 **Natural Language Processing** - Chat naturally and let AI handle the rest
+- 🌐 **Web Interface** - Modern web UI for easy access from any browser
+- 📱 **Responsive Design** - Works on desktop and mobile devices
 
 ## 🚀 Quick Start
 
@@ -36,8 +38,15 @@ npm install
 # Set up environment variables
 echo "GITHUB_TOKEN=your_github_token_here" > .env
 
-# Start the application
-npm run dev
+# Start the web UI
+npm start
+```
+
+### Alternative: CLI Version
+
+```bash
+# Start the command-line version
+npm run cli
 ```
 
 ### GitHub Token Setup
@@ -86,17 +95,61 @@ Choose (1-4): 1
 | `help` | Show available commands |
 | `exit` | Quit the application |
 
+## 🌐 Web UI
+
+The application now includes a modern web interface that provides the same functionality as the CLI version with an intuitive chat-based interface.
+
+### Features
+
+- 💬 **Chat Interface** - Natural conversation flow for describing issues
+- 📝 **AI-Powered Analysis** - Automatic detection and categorization of issues
+- ✨ **AI Enhancement** - Improve issue quality with AI suggestions
+- 🚀 **One-Click Creation** - Create GitHub issues directly from the web interface
+- 📱 **Responsive Design** - Works on desktop and mobile devices
+
+### Accessing the Web UI
+
+```bash
+# Start the web server
+npm start
+
+# Open your browser and navigate to
+http://localhost:3000
+```
+
+### Web UI Workflow
+
+1. **Describe Your Issue** - Type a natural description of your bug, feature, or task
+2. **AI Analysis** - The system automatically analyzes and suggests issue details
+3. **Review & Edit** - Review and modify the suggested title, description, and labels
+4. **AI Enhancement** - Optionally improve the issue with AI suggestions
+5. **Create Issue** - Specify the target repository and create the GitHub issue
+
+### Example Usage
+
+```
+You: The login button crashes the app on iOS Safari
+
+🤖 Assistant: I detected a bug! Here's what I suggest:
+
+📋 Issue Details:
+Title: Login button causes app crash on iOS Safari
+Type: Bug
+Labels: bug, ios, safari
+
+[Edit form appears with pre-filled details]
+```
+
 ## 🔧 Configuration
 
 ### Environment Variables
 
 ```bash
-# Required
+# Required for GitHub integration
 GITHUB_TOKEN=your_github_personal_access_token
 
-# Optional (already configured)
-OPENAI_BASE_URL=https://models.github.ai/inference
-OPENAI_MODEL=openai/gpt-4o-mini
+# Optional
+PORT=3000  # Web server port
 ```
 
 ### Default Repository
@@ -183,11 +236,14 @@ issueer/
 ### Scripts
 
 ```bash
-# Start development server
+# Start web UI server
+npm start
+
+# Start development server (same as start)
 npm run dev
 
-# Start production
-npm start
+# Start command-line version
+npm run cli
 ```
 
 ### API Integration

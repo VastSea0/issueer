@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered GitHub Issue Maker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 AI-Powered GitHub Issue Maker</h1>
+            <p>Describe any bugs, features, or tasks - I'll help create GitHub issues automatically!</p>
+        </header>
+
+        <main>
+            <div class="chat-container">
+                <div id="chat-messages" class="chat-messages">
+                    <div class="message bot-message">
+                        <div class="message-content">
+                            <p>👋 Hi! I'm your AI assistant for creating GitHub issues. Describe a bug, feature request, or task, and I'll help you create a professional GitHub issue.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-container">
+                    <textarea
+                        id="user-input"
+                        placeholder="Describe your issue... (e.g., 'The login button doesn't work on mobile Safari')"
+                        rows="3"
+                    ></textarea>
+                    <button id="send-button" class="send-button">Send</button>
+                </div>
+            </div>
+
+            <div id="issue-form" class="issue-form hidden">
+                <h2>📋 Create GitHub Issue</h2>
+
+                <div class="form-group">
+                    <label for="repo-input">Repository (owner/repo-name):</label>
+                    <input type="text" id="repo-input" placeholder="e.g., microsoft/vscode" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="title-input">Title:</label>
+                    <input type="text" id="title-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description-input">Description:</label>
+                    <textarea id="description-input" rows="6" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="labels-input">Labels (comma-separated):</label>
+                    <input type="text" id="labels-input" placeholder="e.g., bug,priority-high">
+                </div>
+
+                <div class="form-actions">
+                    <button id="improve-button" class="improve-button">✨ Improve with AI</button>
+                    <button id="create-button" class="create-button">🚀 Create Issue</button>
+                    <button id="cancel-button" class="cancel-button">❌ Cancel</button>
+                </div>
+            </div>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Processing...</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

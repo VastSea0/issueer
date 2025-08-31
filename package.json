@@ -5,14 +5,17 @@
   "license": "GNU General Public License v3.0",
   "author": "Egehan KAHRAMAN",
   "type": "module",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node index.js"
+    "start": "node server.js",
+    "dev": "node server.js",
+    "cli": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@octokit/rest": "^22.0.0",
     "dotenv": "^17.2.1",
+    "express": "^5.1.0",
     "openai": "^5.12.2"
   }
 }
